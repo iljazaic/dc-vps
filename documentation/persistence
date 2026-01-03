@@ -1,0 +1,32 @@
+All metadata about the VPS instances will be stored in the MySQL
+database;
+Here the structure and usecases of said database will be described
+
+Database name: vps;
+User: vpsadmin;
+Tables:
+
+	#note that this table also serves as a list of all vps
+	#instances
+
+	routing_table
+		#used to ideintify incoming ssh keys as legit
+		-sha256_fingerprint varchar(150);
+		-userid int;
+		-vpsid int;
+		#used to re-route the incoming traffic
+		#64 characters to ensure potential ipv6 comp
+		-vpsip varchar(64);
+		-createdat datetime;
+	
+	connection_logs
+		-vpsid int;
+		-timestamp datetime;
+		#in case a traceback is needed
+		-tracebackip varchar(64);
+	
+	general_logs
+		-message varchar(100);
+		-timestamp datetime;
+		# 1:ok 2:warn 3:error 4:security?
+		-code int;

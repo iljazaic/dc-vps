@@ -1,0 +1,4 @@
+The other machines, referred to simply as metal, will be running qemu mysql and a tiny webserver
+The purpose of the webserver will be to store and serve out the information about the available
+resources on the machine.
+

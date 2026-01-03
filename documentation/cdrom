@@ -1,0 +1,18 @@
+Contains the current CDROM files (.iso or headless) for VPS deployment.
+
+List of necessary CDROM Kernels:
+
+--------------------------------------------------------------
+   Name		|Added?	| Last updated	|   Souce URL
+--------------------------------------------------------------
+Alpine Linux	| false	| never		|
+Ubintu Server	| false	| never		|
+Debain Bookwork	| false	| never		|
+Arch Linux	| false	| never		|
+Fedora		| false	| never		|
+
+
+directory_location '/home/vps-admin/cdrom/'
+
+//TODO setup a script that fills out this table itself.
+//potentially add an SQL table to keep track of this structure

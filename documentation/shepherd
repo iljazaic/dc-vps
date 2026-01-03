@@ -1,0 +1,6 @@
+The shepherd directory contains the python/bash scripts and executables necessary to
+intercept, validate and re-route ssh traffic into correct VPS instances.
+The usecases will be desribed below;
+
+Intercepting SSH Traffic
+
