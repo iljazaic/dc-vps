@@ -1,0 +1,197 @@
+{
+  "form": {
+    "title": "Deploy VPS",
+    "prices": {
+      "ram": [
+        128,
+        256,
+        512,
+        1024,
+        2048
+      ],
+      "storage": [
+        1,
+        5,
+        10,
+        25,
+        50
+      ],
+      "vcpu": [
+        0.1,
+        0.2,
+        0.5,
+        0.75,
+        1.0
+      ]
+    },
+    "tabs": [
+      {
+        "id": "specs",
+        "label": "Core",
+        "sections": [
+          {
+            "title": "System Specifications",
+            "fields": [
+              {
+                "id": "os",
+                "type": "select",
+                "label": "Operating System",
+                "options": [
+                  {
+                    "value": "alpine",
+                    "label": "Alpine Linux"
+                  },
+                  {
+                    "value": "arch",
+                    "label": "Arch Linux"
+                  },
+                  {
+                    "value": "ubuntu",
+                    "label": "Ubuntu 22.8 LTS"
+                  },
+                  {
+                    "value": "fedora",
+                    "label": "Fedora 39"
+                  },
+                  {
+                    "value": "debian",
+                    "label": "Debian Bookworm"
+                  }
+                ],
+                "default": "alpine"
+              },
+              {
+                "id": "ram",
+                "type": "slider",
+                "label": "RAM (MB)",
+                "min": 0,
+                "max": 4,
+                "step": 1,
+                "default": 1,
+                "unit": " MB"
+              },
+              {
+                "id": "storage",
+                "type": "slider",
+                "label": "Storage (GB)",
+                "min": 0,
+                "max": 4,
+                "step": 1,
+                "default": 1,
+                "unit": " GB"
+              },
+              {
+                "id": "vcpu",
+                "type": "slider",
+                "label": "vCPU Cores",
+                "min": 0,
+                "max": 4,
+                "step": 1,
+                "default": 1,
+                "unit": " vCore"
+              }
+            ]
+          },
+          {
+            "title": "Personal information",
+            "fields": [
+              {
+                "id": "email",
+                "type": "email",
+                "label": "Email"
+              },
+              {
+                "id":"username",
+                "type":"text",
+                "label":"Username (optional)"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "security",
+        "label": "Security",
+        "sections": [
+          {
+            "title": "Security Options",
+            "fields": [
+              {
+                "id": "ownkey",
+                "type": "checkbox",
+                "enable_option": "pubkey",
+                "label": "Upload Own SSH Public Key (zero trust option)",
+                "tooltip": "To make sure your key is only in your hands you may generate a pair (e.g. via ssh-keygen -t rsa -b 4096) and upload the .pub file to be installed into the vm, and use the private key to authenticate. If not selected, the server will generate the keypair for you."
+              },
+              {
+                "id": "pubkey",
+                "type": "file",
+                "accept": ".txt,.pem,.pub,.bin",
+                "enabled": false,
+                "label": "Upload Public Key"
+              },
+              {
+                "id": "cert",
+                "type": "checkbox",
+                "label": "Enable SSH Certificate For VM",
+                "enable_option": "cert_ttl"
+              },
+              {
+                "id": "cert_ttl",
+                "type": "select",
+                "label": "Certificate Renewal Period",
+                "options": [
+                  {
+                    "value": "d",
+                    "label": "1 Day"
+                  },
+                  {
+                    "value": "w",
+                    "label": "1 Week"
+                  },
+                  {
+                    "value": "m",
+                    "label": "1 Month (30 days)"
+                  },
+                  {
+                    "value": "3m",
+                    "label": "3 Months (90 days)"
+                  }
+                ],
+                "default": "w",
+                "enabled": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "advanced",
+        "label": "Networking",
+        "sections": [
+          {
+            "title": "TCP port forwarding",
+            "subtext": "Can configured on demand",
+            "fields": [
+              {
+                "id": "porttable",
+                "type": "table",
+                "label": "",
+                "rows": 5,
+                "cols": 2
+              }
+            ]
+          },
+          {
+            "title": "Custom Subdomain",
+            "fields": [{
+              "id":"subd",
+              "type":"subdomain",
+              "label":"Custom Subdomain (optional)"
+            }]
+          }
+        ]
+      }
+    ]
+  }
+}
