@@ -22,17 +22,14 @@ class FormRenderer {
 
     const formConfig = this.config.form;
 
-    // Create main container
     const mainDiv = document.createElement('div');
     mainDiv.className = 'form-container';
 
-    // Create title
     const titleEl = document.createElement('h1');
     titleEl.textContent = formConfig.title;
     titleEl.className = 'form-title';
     mainDiv.appendChild(titleEl);
 
-    // Create tab navigation
     const tabNav = document.createElement('div');
     tabNav.className = 'tab-nav';
 
@@ -59,7 +56,7 @@ class FormRenderer {
       if (tab.sections && tab.sections.length > 0) {
         tab.sections.forEach(section => {
           const sectionEl = this.renderSection(section);
-          if (tab.id == "specs" && tab.sections.indexOf(section)==0) {
+          if (tab.id == "specs" && tab.sections.indexOf(section) == 0) {
             const priceLabel = document.createElement("h2");
 
             priceLabel.textContent = `Monthly Price: ${this.tprice} kr`
@@ -76,9 +73,6 @@ class FormRenderer {
         emptyMsg.textContent = 'This section is empty';
         tabPane.appendChild(emptyMsg);
       }
-
-
-
       tabContent.appendChild(tabPane);
     });
 
@@ -109,7 +103,7 @@ class FormRenderer {
     this.container.appendChild(mainDiv);
 
 
-    
+
     this.tprice += this.config.form.prices.ram[document.querySelector("#ram").value];
     this.tprice += this.config.form.prices.storage[document.querySelector("#storage").value];
     this.tprice += this.config.form.prices.vcpu[document.querySelector("#vcpu").value];
@@ -147,9 +141,14 @@ class FormRenderer {
         const response = await fetch(`/domain-available?d=${encodeURIComponent(reqDomain)}`);
         const data = await response.json();
         button.style.backgroundColor = data.available == true ? "green" : "red";
+        if(data.available){
+          this.formData['subd'] = reqDomain;
+        }
         //console.log('Domain available:', data.available);
         //return data.available;
       } catch (error) {
+        console.log(error)
+        console.log(this.formData)
         //console.error('Error checking domain availability:', error);
         button.style.backgroundColor = "red";
         button.innerText = "ERR";
@@ -159,6 +158,7 @@ class FormRenderer {
   }
 
   renderField(field) {
+    console.log(this.formData)
     const fieldDiv = document.createElement('div');
     fieldDiv.className = field.type == "checkbox" ? 'form-field flex-row' : 'form-field';
 
@@ -200,7 +200,19 @@ class FormRenderer {
               if (field.id == 'porttable') {
                 if (j == 0) {
                   let tip = document.createElement('input');
-                  tip.className = "field-input"
+                  tip.className = "field-input portin"
+
+                  tip.addEventListener('input', (e) => {
+                    const list = document.querySelectorAll('.portin')
+                    var arr = [...list];
+                    this.formData[field.id] = '';
+                    arr.forEach(inp => {
+                      if (inp.value != '') {
+                        this.formData[field.id] += inp.value+'|';
+                      }
+                    });
+
+                  });
                   td.appendChild(tip);
 
                 } else {
@@ -215,6 +227,8 @@ class FormRenderer {
 
           }
         }
+
+        this.formData[field.id] = "";
         break;
       default:
         input = document.createElement('input');
@@ -246,10 +260,17 @@ class FormRenderer {
         ver.className = "verifysubdomain";
         ver.innerText = "?"
 
-        ver.onclick = this.verifySubdomainAvailability;
+        inp.addEventListener('input', (e)=>{
+            this.formData[field.id] = '';
+            ver.style.backgroundColor = 'white';
+        })
+
+        ver.onclick = () => this.verifySubdomainAvailability();
         ver.id = "verifyDomainButton"
         td3.appendChild(ver);
         tr.appendChild(td3);
+
+        this.formData[field.id] = "";
         break;
       case 'file':
         input = document.createElement('input');

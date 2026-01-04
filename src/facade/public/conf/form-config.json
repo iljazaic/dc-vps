@@ -199,6 +199,7 @@
               {
                 "id": "porttable",
                 "type": "table",
+                "default":"",
                 "label": "",
                 "rows": 5,
                 "cols": 2
