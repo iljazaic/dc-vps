@@ -4,6 +4,7 @@ class FormRenderer {
     this.container = document.getElementById(containerId);
     this.config = null;
     this.formData = {};
+    this.tprice = 0;
   }
 
   async init() {
@@ -58,6 +59,15 @@ class FormRenderer {
       if (tab.sections && tab.sections.length > 0) {
         tab.sections.forEach(section => {
           const sectionEl = this.renderSection(section);
+          if (tab.id == "specs" && tab.sections.indexOf(section)==0) {
+            const priceLabel = document.createElement("h2");
+
+            priceLabel.textContent = `Monthly Price: ${this.tprice} kr`
+            priceLabel.className = "price-label"
+            priceLabel.id = "price";
+            sectionEl.appendChild(priceLabel);
+
+          }
           tabPane.appendChild(sectionEl);
         });
       } else {
@@ -67,10 +77,14 @@ class FormRenderer {
         tabPane.appendChild(emptyMsg);
       }
 
+
+
       tabContent.appendChild(tabPane);
     });
 
     mainDiv.appendChild(tabContent);
+
+
 
     // Create form actions
     const actionsDiv = document.createElement('div');
@@ -93,6 +107,13 @@ class FormRenderer {
     mainDiv.appendChild(actionsDiv);
 
     this.container.appendChild(mainDiv);
+
+
+    
+    this.tprice += this.config.form.prices.ram[document.querySelector("#ram").value];
+    this.tprice += this.config.form.prices.storage[document.querySelector("#storage").value];
+    this.tprice += this.config.form.prices.vcpu[document.querySelector("#vcpu").value];
+    document.querySelector("#price").innerText = `Monthly Price: ${this.tprice} kr`;
   }
 
   renderSection(section) {
@@ -131,7 +152,7 @@ class FormRenderer {
       } catch (error) {
         //console.error('Error checking domain availability:', error);
         button.style.backgroundColor = "red";
-        button.innerText="ERR";
+        button.innerText = "ERR";
         return false;
       }
     }
@@ -220,7 +241,7 @@ class FormRenderer {
         tr.appendChild(td1)
         tr.appendChild(td2);
         let td3 = document.createElement('td');
-        td3.innerText="Check availability:  "
+        td3.innerText = "Check availability:  "
         let ver = document.createElement('button');
         ver.className = "verifysubdomain";
         ver.innerText = "?"
@@ -270,12 +291,18 @@ class FormRenderer {
 
         const valueDisplay = document.createElement('span');
         valueDisplay.className = 'slider-value';
-        valueDisplay.textContent = this.config.form.prices[field.id][field.default] + field.unit;
+        valueDisplay.textContent = this.config.form.values[field.id][field.default] + field.unit;
 
         input.addEventListener('input', (e) => {
-          console.log(this.config.form.prices)
-          valueDisplay.textContent = this.config.form.prices[field.id][e.target.value] + field.unit
+          console.log(this.config.form.values)
+          valueDisplay.textContent = this.config.form.values[field.id][e.target.value] + field.unit
           this.formData[field.id] = parseInt(e.target.value);
+
+          let p = this.config.form.prices.ram[document.querySelector("#ram").value];
+          p += this.config.form.prices.storage[document.querySelector("#storage").value];
+          p += this.config.form.prices.vcpu[document.querySelector("#vcpu").value];
+          this.tprice = p;
+          document.querySelector('#price').innerText = `Monthly Price: ${p} kr`
         });
 
         this.formData[field.id] = field.default || field.min;

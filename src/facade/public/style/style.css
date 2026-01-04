@@ -282,7 +282,9 @@ select.field-input {
 
 .table {
   border-collapse: collapse;
-  width: 100% !important;
+  width: 80% !important;
+  left: 10%;
+  position: relative;
   font-size: 20px;
   border: none;
   color: white;
@@ -309,8 +311,14 @@ td>.field-input {
 
 .verifysubdomain:hover{
   cursor: pointer;
-
 }
+
+.price-label{
+  padding-top: 10px;
+  color: white;
+  font-size: 20px;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .form-container {
