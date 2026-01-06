@@ -8,5 +8,6 @@ if [ -z "$1" ] || [ -z "$2"]; then
     exit 1
 fi
 
-res=$(curl -s "$ip/")
+res=$(curl -s "$ip/deploy_reservation?id=$id")
+echo "$res"
 

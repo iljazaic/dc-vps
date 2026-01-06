@@ -92,8 +92,13 @@ async function initiateDeployment(reservationId) {
         //output should be the ip
 
         const vm_ip = trimmedOutput;
+        try {
+            const { stdout1, stderr1 } =
+                await exec`bash ${pathForBash + "deployment_and_reservation/initiate deployment"}.sh ${paymenId} ${ip}`;
+            
 
-        
+        }
+
     } catch (err) {
         return { success: false, vm_id: null, ssh_key: null };
     }
