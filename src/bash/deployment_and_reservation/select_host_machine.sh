@@ -5,7 +5,7 @@ cpu=$3
 os=$4
 best_host="null"
 best_score=0
-valid_hosts="../../../lib/hosting/valid_hosts"
+valid_hosts="../../../lib/net/valid_hosts"
 
 while IFS= read -r line
 do
