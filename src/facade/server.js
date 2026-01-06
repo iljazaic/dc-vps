@@ -26,21 +26,19 @@ async function subdomainAvailiable(subdomain) {
 }
 
 async function createReservation(reservationString) {
-
     try {
         const { stdout, stderr } = await exec(`bash ${pathForBash + "deployment_and_reservation/create_reservation"}.sh ${subdomain}`);
-        return stdout === "true";
+
+        if (stdout === "NO MACHINE CAN HOST") {
+            return { success: false, bill: null, message: "No Machine Available to host, try again later." };
+        } else {
+            return { succes: true, bill: null, message: "Reservation successfully created, redirecting to checkout." }
+        }
     } catch (err) {
-        //console.error('Error:', err);
-        throw err;
+        return { succes: false, bill: null, message: "Internal Server Error while creating reservation. Try again or contact support." }
     }
 }
 
-
-
-app.listen(3000, () => {
-    console.log("user connected");
-})
 
 
 //pages
@@ -85,7 +83,7 @@ app.post('/create-reservation', async (req, res) => {
     jobs[jobId] = { status: "processing" };
 
     createReservation(reservationBody).then(response => {
-        jobs[jobId] = { status: "completed", succes: response.success, bill: response.bill };
+        jobs[jobId] = { status: "completed", succes: response.success, bill: response.bill, message: response.message };
     });
 
     res.json({ jobId });
@@ -96,3 +94,12 @@ app.get("/check-reservation-status/:jobId", (req, res) => {
     const job = jobs[req.params.jobId];
     res.json(job || { status: "not_found" });
 });
+
+
+
+
+
+
+app.listen(3000, () => {
+    console.log("user connected");
+})
