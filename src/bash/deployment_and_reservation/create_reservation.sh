@@ -3,12 +3,13 @@ ram=$1
 sto=$2
 cpu=$3
 os=$4
+id=$5
 
 best_machine=$(select_host_machine "$ram" "$sto" "$cpu" 2>/dev/null)
 
 if [ "$best_machine" != "null" ]; then
-    res=$(curl -s "$best_machine/?ram=$ram&sto=$sto&cpu=$cpu&os=$os")
-    echo "$res"
+    res=$(curl -s "$best_machine/?ram=$ram&sto=$sto&cpu=$cpu&os=$os&id=$id")
+    echo "$best_machine"
 else
     echo "NO MACHINE CAN HOST"
     exit 1
