@@ -18,7 +18,7 @@ const pathForBash = "../bash/";
 async function subdomainAvailiable(subdomain) {
     try {
         const { stdout, stderr } = await exec(`bash ${pathForBash + 'subdomain_service/verify_subdomain'}.sh ${subdomain}`);
-        return stdout === "true";
+        return stdout.trim() == "true";
     } catch (err) {
         //console.error('Error:', err);
         throw err;
@@ -38,28 +38,6 @@ async function createReservation(reservationString) {
         return { succes: false, bill: null, message: "Internal Server Error while creating reservation. Try again or contact support." }
     }
 }
-
-
-
-//pages
-
-app.get('/', (req, res) => {
-    res.sendFile(__dirname.replace('server', 'html') + '/pages/index.html');
-})
-
-//should include
-//checkout terms completed
-app.get('/:pageName', (req, res) => {
-    const page = req.params.pageName;
-    const filePath = path.join(__dirname, '../html/pages', `${page}.html`);
-
-    res.sendFile(filePath, (err) => {
-        if (err) {
-            console.error(err);
-            res.status(404).send("Page not found");
-        }
-    });
-})
 
 
 //api
@@ -98,6 +76,25 @@ app.get("/check-reservation-status/:jobId", (req, res) => {
 
 
 
+//pages
+
+app.get('/', (req, res) => {
+    res.sendFile(__dirname.replace('server', 'html') + '/pages/index.html');
+})
+
+//should include
+//checkout terms completed
+app.get('/:pageName', (req, res) => {
+    const page = req.params.pageName;
+    const filePath = path.join(__dirname, '../html/pages', `${page}.html`);
+
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            console.error(err);
+            res.status(404).send("Page not found");
+        }
+    });
+})
 
 
 app.listen(3000, () => {
