@@ -81,7 +81,6 @@ async function createReservation(reservationBody, paymentId) {
 
 async function initiateDeployment(reservationId) {
     try {
-
         const { stdout, stderr } =
             await exec`bash ${pathForBash + "deployment_and_reservation/get_reservation_ip_with_id"}.sh ${reservationId}`;
         const trimmedOutput = stdout.trim();
@@ -95,15 +94,13 @@ async function initiateDeployment(reservationId) {
         try {
             const { stdout1, stderr1 } =
                 await exec`bash ${pathForBash + "deployment_and_reservation/initiate deployment"}.sh ${paymenId} ${ip}`;
-            
-
+        } catch (err) {
+            return { success: false, vm_id: null, ssh_key: null };
         }
 
-    } catch (err) {
-        return { success: false, vm_id: null, ssh_key: null };
+    } catch (er) {
+        console.log("ERROR: no ip found bound to the paymentId: " + reservationId)
     }
-
-
 
 }
 
@@ -166,14 +163,7 @@ app.get("/verify-payment", async (req, res) => {
         initiateDeployment(req.params.paymenId).then(response => {
             deployment_jobs[req.payments.paymentId] = { status: "completed", vm_id: response.vm_id, ssh_key: response.ssh_key }
         });
-
         res.status(200).json({ jobId: jobId, paymentVerified: true });
-
-        //begin VM deployment from correct reservation
-
-        //fetch reservation
-
-        //redirect user to /completed
     } else {
         res.status(402).body("Awaiting Payment");
     }
@@ -189,19 +179,7 @@ app.get("/completed", (req, res) => {
     else {
         res.sendFile(__dirname.replace('server', 'html') + '/pages/completed.html');
     }
-
-
 })
-
-async function initiateDeployment(reservationId) {
-    try {
-        const { stdout, stderr } = await exec(`bash ${pathForBash + 'subdomain_service/verify_subdomain'}.sh ${subdomain}`);
-        return stdout.trim() == "true";
-    } catch (err) {
-        //console.error('Error:', err);
-        throw err;
-    }
-}
 
 
 //pages

@@ -6,8 +6,8 @@ List of necessary CDROM Kernels:
    Name		|Added?	| Last updated	|   Souce URL
 --------------------------------------------------------------
 Alpine Linux	| false	| never		|
-Ubintu Server	| false	| never		|
-Debain Bookwork	| false	| never		|
+Ubuntu Server	| false	| never		|
+Debain Bookworm	| false	| never		|
 Arch Linux	| false	| never		|
 Fedora		| false	| never		|
 
