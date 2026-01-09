@@ -1,8 +1,5 @@
 #!/bin/bash
 
-echo "Content-Type: text/plain"
-echo ""
-
 osname=$1
 ram=$2
 storage=$3

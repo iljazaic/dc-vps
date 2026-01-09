@@ -1,8 +1,5 @@
 #!/bin/bash
 
-echo "Content-Type: text/plain"
-echo ""
-
 #get reserved stuff
 
 #fallback in case smth goes wrong

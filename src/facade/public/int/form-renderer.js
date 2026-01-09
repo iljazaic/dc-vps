@@ -236,6 +236,64 @@ class FormRenderer {
         input.id = field.id;
         input.className = 'field-input';
         input.type = field.type;
+        if (field.enabled != undefined && field.enabled == false) input.setAttribute('disabled', '');
+
+        if (field.id == "emailv") {
+          const vbtn = document.createElement("button")
+          vbtn.onclick = () => {
+            const email = document.querySelector("#email").value;
+            fetch('./validate-email', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ email: email })
+            })
+              .then(response => {
+                if (response.status === 200) {
+                  vbtn.innerText = 'Code sent';
+                  vbtn.style.borderColor = "#ffffffff"
+
+                } else if (response.status === 400) {
+                  if (vbtn.innerText.includes("Invalid Email")) {
+                    vbtn.innerText += "!"
+                    if (vbtn.innerText.includes("!!!!!")) {
+                      vbtn.innerText += "😭"
+                    }
+                  } else {
+                    vbtn.innerText = 'Invalid Email';
+                    vbtn.style.borderColor = "#e76565ff"
+                  }
+
+                } else if (response.status >= 500) {
+                  button.innerText = 'Error: Try Later';
+                } else if (response.status === 412) {
+                  if (vbtn.innerText.includes("Enter Email")) {
+                    vbtn.innerText += "!"
+                    if (vbtn.innerText.includes("!!!!!")) {
+                      vbtn.innerText += "😭"
+                    }
+                  } else {
+                    vbtn.innerText = 'Enter Email';
+
+                    vbtn.style.borderColor = "#e76565ff"
+                  }
+                }
+              })
+              .catch(error => {
+                vbtn.innerText = 'Error: Try Later';
+                console.error('Error validating email:', error);
+              });
+          }
+          vbtn.innerText = "Send Code"
+          vbtn.style.padding = "0"
+          fieldDiv.appendChild(vbtn)
+          vbtn.className = "btn btn-primary";
+          vbtn.style.width = "100px"
+          vbtn.style.height = "50px"
+          vbtn.style.position = "relative"
+          fieldDiv.style.textAlign = "left"
+        }
         break;
       case 'subdomain':
         table = document.createElement('table')
@@ -352,8 +410,10 @@ class FormRenderer {
           if (field.enable_option != undefined) {
             if (e.target.checked == true) {
               document.querySelector('#' + field.enable_option).removeAttribute("disabled");
+              document.querySelector('#' + field.enable_option2).removeAttribute("disabled");
             } else {
-              document.querySelector('#' + field.enable_option).setAttribute("disabled", '')
+              document.querySelector('#' + field.enable_option).setAttribute("disabled", '');
+              document.querySelector('#' + field.enable_option2).setAttribute("disabled", '')
             }
           }
         });
@@ -424,7 +484,7 @@ class FormRenderer {
               if (data.status === 'completed') {
                 console.log(data)
                 clearInterval(checkReservationStatus);
-                window.location = "./checkout?paymentId=" +data.paymentId;
+                window.location = "./checkout?paymentId=" + data.paymentId;
               } else if (data.status === 'not_found') {
                 clearInterval(checkReservationStatus);
                 throw new Error('Reservation not found');

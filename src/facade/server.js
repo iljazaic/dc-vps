@@ -2,6 +2,8 @@ const express = require("express");
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 
+const cron = require('node-cron');
+
 const axios = require('axios');
 
 const { v4: uuidv4 } = require('uuid');
@@ -13,7 +15,8 @@ app.use(express.static(path.join(__dirname.replace('server', ''), "public")));
 app.use(express.json());
 
 //from upstream directory?
-const paymentService = require("../facade/payment_service/payment_service");
+const paymentService = require("./services/payment_service");
+const emailService = require("./services/email_service");
 
 const { create } = require("domain");
 
@@ -111,6 +114,32 @@ async function initiateDeployment(reservationId) {
 }
 
 //api
+
+const OTP_STORAGE = {};
+
+app.post("/validate-email", (req, res) => {
+    try {
+        const email = req.body.email;
+        console.log(email);
+        if (email === undefined || email === null || email==='') {
+            res.status(412).send("No email provided");
+        } else {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailRegex.test(email)) {
+                const otp = Math.random().toString(36).substring(2, 8).toUpperCase();
+                OTP_STORAGE[email] = otp;
+                emailService.sendVerificationEmail(email, otp);
+                // TODO: implement email sending function
+                res.status(200).json({ message: "OTP sent to email" });
+            } else {
+                res.status(400).send("Not a valid email");
+            }
+        }
+    } catch (err) {
+        res.status(500).json({ error: "Failed to send email" })
+    }
+});
+
 app.get('/domain-available', async (req, res) => {
     try {
         const controller = new AbortController();
@@ -130,6 +159,7 @@ app.post('/create-reservation', async (req, res) => {
     const jobId = uuidv4();
     reservation_jobs[jobId] = { status: "processing" };
 
+    console.log(req.body);
     const paymentId = await createPayment(reservationBody);
 
     console.log(paymentId)
@@ -225,3 +255,19 @@ app.get('/:pageName', (req, res) => {
 app.listen(3000, () => {
     console.log("user connected");
 })
+
+const crontime = "55 23 * * *"
+//recurring daily verification of subscriptions
+cron.schedule(crontime, async () => {
+    exec(bashpath, async (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error executing script: ${error.message}`);
+            return;
+        }
+        const result = stdout.trim().split('\n');
+        for (let i = 0; i < result.length(); i++) {
+            await paymentService.dailySubscriptionCharges();
+        }
+    });
+});
+

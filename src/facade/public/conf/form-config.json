@@ -125,7 +125,7 @@
             ]
           },
           {
-            "title": "Personal information",
+            "title": "Authentication",
             "fields": [
               {
                 "id": "email",
@@ -133,9 +133,9 @@
                 "label": "Email"
               },
               {
-                "id": "username",
-                "type": "text",
-                "label": "Username (optional)"
+                "id":"emailv",
+                "type":"text",
+                "label":"Email Verification"
               }
             ]
           }
@@ -152,6 +152,7 @@
                 "id": "ownkey",
                 "type": "checkbox",
                 "enable_option": "pubkey",
+                "enable_option2":"fingerprint",
                 "label": "Upload Own SSH Public Key (zero trust option)",
                 "tooltip": "To make sure your key is only in your hands you may generate a pair (e.g. via ssh-keygen -t rsa -b 4096) and upload the .pub file to be installed into the vm, and use the private key to authenticate. If not selected, the server will generate the keypair for you."
               },
@@ -161,6 +162,12 @@
                 "accept": ".txt,.pem,.pub,.bin",
                 "enabled": false,
                 "label": "Upload Public Key"
+              },
+              {
+                "id":"fingerprint",
+                "type":"text",
+                "enabled":false,
+                "label":"Private Key Fingerptint"
               },
               {
                 "id": "cert",
