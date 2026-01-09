@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Completed - Instance Details</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #05021f 0%, #0a0435 100%);
+      min-height: 100vh;
+      color: #ffffff;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding-top: 40px;
+    }
+
+    .status-header {
+      background: linear-gradient(135deg, #ff8f07 0%, #ffb347 100%);
+      border-radius: 16px;
+      padding: 24px 32px;
+      text-align: center;
+      margin-bottom: 32px;
+      box-shadow: 0 8px 32px rgba(255, 143, 7, 0.3);
+    }
+
+    .status-header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #05021f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .status-header.loading h1::after {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #05021f;
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    .info-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .info-section {
+      margin-bottom: 32px;
+    }
+
+    .info-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .info-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffc886;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .info-content {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px 20px;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .info-content:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 200, 134, 0.3);
+    }
+
+    .info-content.skeleton {
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.03);
+      min-height: 60px;
+    }
+
+    .info-content.skeleton::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent);
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      100% {
+        left: 100%;
+      }
+    }
+
+    .info-text {
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      word-break: break-all;
+      color: #e0e0e0;
+      padding-right: 50px;
+    }
+
+    .info-text.multiline {
+      white-space: pre-wrap;
+    }
+
+    .copy-button {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 143, 7, 0.2);
+      border: 1px solid rgba(255, 143, 7, 0.4);
+      color: #ffc886;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .copy-button:hover {
+      background: rgba(255, 143, 7, 0.3);
+      border-color: rgba(255, 143, 7, 0.6);
+      transform: translateY(-50%) scale(1.05);
+    }
+
+    .copy-button:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+
+    .copy-button.copied {
+      background: rgba(76, 175, 80, 0.3);
+      border-color: rgba(76, 175, 80, 0.6);
+      color: #a5d6a7;
+    }
+
+    .alert-box {
+      background: rgba(255, 193, 7, 0.1);
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-top: 24px;
+      display: flex;
+      align-items: start;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .alert-box i {
+      color: #ffc107;
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .alert-box p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #f0f0f0;
+    }
+
+    .success-icon {
+      display: inline-block;
+      font-size: 24px;
+      animation: scaleIn 0.5s ease-out;
+    }
+
+    @keyframes scaleIn {
+      0% {
+        transform: scale(0);
+      }
+
+      50% {
+        transform: scale(1.2);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding-top: 20px;
+      }
+
+      .status-header h1 {
+        font-size: 22px;
+      }
+
+      .info-card {
+        padding: 24px 20px;
+      }
+
+      .info-text {
+        font-size: 12px;
+        padding-right: 45px;
+      }
+
+      .copy-button {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+      }
+    }
+
+
+    .tooltip {
+      position: absolute;
+      visibility: hidden;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px 20px;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+
+    /* Accessibility improvements */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    .copy-button:focus {
+      outline: 2px solid #ffc886;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header class="status-header loading" id="statusHeader">
+      <h1 id="statusTitle">
+        <span id="statusText">Waiting for payment confirmation</span>
+      </h1>
+    </header>
+    <div class="tooltip">
+      This is the key you use to gain access to your machine. Store this text in a .pem file in a secure location, and
+      use the path to it to specify the SSH engine to use it for authentication.
+    </div>
+    <main class="info-card">
+      <section class="info-section">
+        <label class="info-label" for="instanceId">Instance ID</label>
+        <div class="info-content skeleton" id="instanceIdContent">
+          <span class="info-text" id="instanceId"></span>
+          <button class="copy-button" aria-label="Copy instance ID to clipboard" data-copy="instanceId"
+            style="display: none;">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
+      </section>
+
+      <section class="info-section">
+        <label class="info-label" for="privateKey">RSA Private Key</label>
+        <div class="info-content skeleton" id="privateKeyContent">
+          <span class="info-text multiline" id="privateKey"></span>
+          <button class="copy-button" aria-label="Copy private key to clipboard" data-copy="privateKey"
+            style="display: none;">
+            <i class="fas fa-copy"></i>
+          </button>
+          <button class="copy-button" id="tooltip" aria-label="What is this" style="top:130px;">
+            <strong style="font-size: 25px;">?</strong>
+          </button>
+        </div>
+      </section>
+
+      <section class="info-section">
+        <label class="info-label" for="sshCommand">SSH Connection Command</label>
+        <div class="info-content skeleton" id="sshCommandContent">
+          <span class="info-text" id="sshCommand"></span>
+          <button class="copy-button" aria-label="Copy SSH command to clipboard" data-copy="sshCommand"
+            style="display: none;">
+            <i class="fas fa-copy"></i>
+          </button>
+
+        </div>
+      </section>
+
+      <div class="alert-box">
+
+        <p><i class="fas fa-exclamation-triangle"></i><strong> Important:</strong> Save your instance ID and private key
+          securely. You'll need the instance ID for cancellation, and the private key cannot be recovered if lost.</p>
+        <p>You may only connect via the provided port, which you can always look up in the instance Id (3rd number).</p>
+        <p>
+          IF YOU LOSE YOUR KEY OR ID PLEASE CONTACT US ON dancompute@outlook.com!
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function updateStatus(isLoading, isPaid) {
+      const header = document.getElementById('statusHeader');
+      const statusText = document.getElementById('statusText');
+
+      if (isLoading) {
+        header.classList.add('loading');
+        statusText.textContent = 'Waiting for payment confirmation';
+      } else if (isPaid) {
+        header.classList.remove('loading');
+        statusText.innerHTML = '<i class="fas fa-check-circle success-icon"></i> Payment Confirmed';
+      } else {
+        header.classList.remove('loading');
+        statusText.innerHTML = 'Could not confirm payment - contact support';
+      }
+    }
+
+    function loadInformation(privateKey, instanceId, command) {
+      // Update status
+      updateStatus(false, true);
+
+      // Update content
+      const elements = [
+        { id: 'instanceId', value: instanceId, contentId: 'instanceIdContent' },
+        { id: 'privateKey', value: privateKey, contentId: 'privateKeyContent' },
+        { id: 'sshCommand', value: command, contentId: 'sshCommandContent' }
+      ];
+
+      elements.forEach(({ id, value, contentId }) => {
+        const element = document.getElementById(id);
+        const content = document.getElementById(contentId);
+        const button = content.querySelector('.copy-button');
+
+        element.textContent = value;
+        content.classList.remove('skeleton');
+        button.style.display = 'flex';
+      });
+    }
+
+    // Copy to clipboard functionality
+    document.querySelectorAll('.copy-button').forEach(button => {
+      button.addEventListener('click', async function () {
+        try {
+          const targetId = this.getAttribute('data-copy');
+          const textElement = document.getElementById(targetId);
+          const text = textElement.textContent;
+
+          try {
+            await navigator.clipboard.writeText(text);
+
+            const icon = this.querySelector('i');
+            const originalClass = icon.className;
+            icon.className = 'fas fa-check';
+            this.classList.add('copied');
+
+            const announcement = document.createElement('div');
+            announcement.className = 'sr-only';
+            announcement.setAttribute('role', 'status');
+            announcement.setAttribute('aria-live', 'polite');
+            announcement.textContent = 'Copied to clipboard';
+            document.body.appendChild(announcement);
+
+            setTimeout(() => {
+              icon.className = originalClass;
+              this.classList.remove('copied');
+              announcement.remove();
+            }, 2000);
+          } catch (err) {
+            console.error('Failed to copy:', err);
+            alert('Failed to copy to clipboard. Please select and copy manually.');
+          }
+        } catch {
+
+        }
+
+      });
+    });
+
+
+    document.addEventListener('DOMContentLoaded', async function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentId = urlParams.get('paymentId');
+
+      const response = await fetch("/verify-payment?paymentId=" + paymentId, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (response.ok()) {
+        const data = response.text();
+        const spl = data.split('|');
+        loadInformation(
+          spl[1], spl[0], spl[2]
+        );
+      } else {
+        updateStatus(false, false);
+      }
+    });
+
+
+    /*
+    setTimeout(() => {
+      loadInformation(
+        `ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAklOUpkDHrfHY17SbrmTIpNLTGK9Tjom/BWDSU
+GPl+nafzlHDTYW7hdI4yZ5ew18JH4JW9jbhUFrviQzM7xlELEVf4h9lFX5QVkbPppSwg0cda3
+Pbv7kOdJ/MTyBlWXFCR+HAo3FXRitBqxiX1nKhXpHAZsMciLq8V6RjsNAQwdsdMFvSlVK/7XA
+t3FaoJoAsncM1Q9x5+3V0Ww68/eIFmb1zuUFljQJKprrX88XypNDvjYNby6vw/Pb0rwert/En
+mZ+AW4OZPnTPI89ZPmVMLuayrD2cE86Z/il8b+gw3r3+1nKatmIkjn2so1d01QraTlMqVSsbx
+NrRFi9wrf+M7Q==`,
+        "v1-5-2003-8bt987-3c87c",
+        "ssh -i path/to/key.pem -p 2003 user@dancompute.net"
+      );
+    }, 1000);*/
+  </script>
+</body>
+
+</html>

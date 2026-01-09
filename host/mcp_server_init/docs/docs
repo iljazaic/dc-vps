@@ -1,0 +1,13 @@
+this directory contains the necessary scripts in python to install and configure an mcp server on the host machine
+the scripts are in python and run on the vms and therefore are independent of the host os
+
+this contains python and bash scripts
+
+structure:
+
+mcp_server_init
+               |-src
+
+
+
+last updated: 09/01/26

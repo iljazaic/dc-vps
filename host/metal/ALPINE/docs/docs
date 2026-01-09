@@ -1,0 +1,19 @@
+this folder contains the scripts necessary to install on the host machine that
+is running Alpine Linux as its main os
+
+this contains bash scrips, temp folders, init scripts and more.
+
+structure:
+
+ALPINE 
+     |-src 
+     |     |-bash---------------#actual workhorse scripts
+     |     |-caddy--------------#caddyfile and others to ensure port forwarding
+     |     |-install------------#self-building installation scripts
+     |-lib 
+     |     |-init_scripts-------#different os systems need different injection scripts
+     |     |-cloud_images-------#temp storage for .iso files trasferred from shepherd
+     |     |-backups------------#to backup dbs
+     |-docs
+    
+last updated: 09/01/26

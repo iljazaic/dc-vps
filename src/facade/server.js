@@ -2,6 +2,8 @@ const express = require("express");
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 
+const axios = require('axios');
+
 const { v4: uuidv4 } = require('uuid');
 
 const path = require("path");
@@ -11,7 +13,8 @@ app.use(express.static(path.join(__dirname.replace('server', ''), "public")));
 app.use(express.json());
 
 //from upstream directory?
-const { paymentService } = require("../facade/payment_service/payment_service");
+const paymentService = require("../facade/payment_service/payment_service");
+
 const { create } = require("domain");
 
 
@@ -33,13 +36,16 @@ async function subdomainAvailiable(subdomain) {
 }
 
 async function createPayment(reservationJson) {
-    const payload = paymentService.createPaymentTemplate(reservationJson);
+
     try {
+        const payload = await paymentService.createPaymentTemplate(reservationJson);
+
         const headers = {
             'Content-Type': 'application/json',
-            'Authorization': process.env.API_KEY || apiKey
+            'Authorization': '7ca2d37b3b7f4617b35072ebf8b113d3'
         };
         const url = 'https://test.api.dibspayment.eu/v1/payments';
+        console.log(payload)
         const response = await axios.post(url, payload, { headers });
 
         const paymentId = response.data.paymentId;
@@ -124,18 +130,19 @@ app.post('/create-reservation', async (req, res) => {
     const jobId = uuidv4();
     reservation_jobs[jobId] = { status: "processing" };
 
-    const paymentId = createPayment(reservationBody);
+    const paymentId = await createPayment(reservationBody);
 
+    console.log(paymentId)
     if (paymentId.includes("error")) {
-        res.status(500).body(paymentId);
+        res.status(500).send(paymentId);
         return;
     }
 
     createReservation(reservationBody, paymentId).then(response => {
-        reservation_jobs[jobId] = { status: "completed", succes: response.success, paymentId: response.paymentId, message: response.message };
+        reservation_jobs[jobId] = { status: "completed", succes: response.success, paymentId: paymentId, message: response.message };
     });
 
-    res.status(200).json({ jobId: jobId, paymenId: paymentId });
+    res.status(200).json({ jobId: jobId });
 });
 
 
@@ -165,7 +172,7 @@ app.get("/verify-payment", async (req, res) => {
         });
         res.status(200).json({ jobId: jobId, paymentVerified: true });
     } else {
-        res.status(402).body("Awaiting Payment");
+        res.status(402).send("Awaiting Payment");
     }
 })
 
@@ -173,11 +180,24 @@ app.get("/completed", (req, res) => {
     const paymentId = req.params.paymenId;
 
     if (paymentId == undefined || paymentId == null) {
-        res.status(400).body("no payment id provided; contact support")
+        res.status(400);
         return;
     }
     else {
         res.sendFile(__dirname.replace('server', 'html') + '/pages/completed.html');
+    }
+})
+
+
+app.get("/checkout", (req, res) => {
+    const paymentId = req.query.paymentId;
+    if (paymentId == undefined || paymentId == null) {
+        res.status(400)
+        res.send();
+        return;
+    }
+    else {
+        res.sendFile(__dirname.replace('server', 'html') + '/pages/checkout.html');
     }
 })
 

@@ -27,6 +27,7 @@ do
             break
         fi
         
+        # score needs to be checked
         # evaluate against current best
         if [ "$var_name" = "ram" ]; then
             # ram is reported in mb, in the 1000s, high weight

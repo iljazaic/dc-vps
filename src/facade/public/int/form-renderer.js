@@ -1,3 +1,4 @@
+
 class FormRenderer {
   constructor(configUrl, containerId) {
     this.configUrl = configUrl;
@@ -103,10 +104,10 @@ class FormRenderer {
     this.container.appendChild(mainDiv);
 
 
-
-    this.tprice += this.config.form.prices.ram[document.querySelector("#ram").value];
-    this.tprice += this.config.form.prices.storage[document.querySelector("#storage").value];
-    this.tprice += this.config.form.prices.vcpu[document.querySelector("#vcpu").value];
+    console.log(this.config.form.prices.ram)
+    this.tprice += this.config.form.prices.ram.val[document.querySelector("#ram").value];
+    this.tprice += this.config.form.prices.sto.val[document.querySelector("#storage").value];
+    this.tprice += this.config.form.prices.cpu.val[document.querySelector("#vcpu").value];
     document.querySelector("#price").innerText = `Monthly Price: ${this.tprice} kr`;
   }
 
@@ -141,7 +142,7 @@ class FormRenderer {
         const response = await fetch(`/domain-available?d=${encodeURIComponent(reqDomain)}`);
         const data = await response.json();
         button.style.backgroundColor = data.available == true ? "green" : "red";
-        if(data.available){
+        if (data.available) {
           this.formData['subd'] = reqDomain;
         }
         //console.log('Domain available:', data.available);
@@ -208,7 +209,7 @@ class FormRenderer {
                     this.formData[field.id] = '';
                     arr.forEach(inp => {
                       if (inp.value != '') {
-                        this.formData[field.id] += inp.value+'|';
+                        this.formData[field.id] += inp.value + '|';
                       }
                     });
 
@@ -260,9 +261,9 @@ class FormRenderer {
         ver.className = "verifysubdomain";
         ver.innerText = "?"
 
-        inp.addEventListener('input', (e)=>{
-            this.formData[field.id] = '';
-            ver.style.backgroundColor = 'white';
+        inp.addEventListener('input', (e) => {
+          this.formData[field.id] = '';
+          ver.style.backgroundColor = 'white';
         })
 
         ver.onclick = () => this.verifySubdomainAvailability();
@@ -319,9 +320,12 @@ class FormRenderer {
           valueDisplay.textContent = this.config.form.values[field.id][e.target.value] + field.unit
           this.formData[field.id] = parseInt(e.target.value);
 
-          let p = this.config.form.prices.ram[document.querySelector("#ram").value];
-          p += this.config.form.prices.storage[document.querySelector("#storage").value];
-          p += this.config.form.prices.vcpu[document.querySelector("#vcpu").value];
+
+          console.log(this.config.form.prices.ram[document.querySelector("#ram").value])
+
+          let p = this.config.form.prices.ram.val[document.querySelector("#ram").value];
+          p += this.config.form.prices.sto.val[document.querySelector("#storage").value];
+          p += this.config.form.prices.cpu.val[document.querySelector("#vcpu").value];
           this.tprice = p;
           document.querySelector('#price').innerText = `Monthly Price: ${p} kr`
         });
@@ -402,8 +406,35 @@ class FormRenderer {
   }
 
   handleSubmit() {
-    console.log('Form submitted with data:', this.formData);
-    alert('Configuration submitted:\n' + JSON.stringify(this.formData, null, 2));
+    fetch('/create-reservation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(this.formData)
+    })
+      .then(response => response.json())
+      .then(data => {
+        const jobid = data.jobId;//reservation job - could take 1-2 seconds;
+
+        const checkReservationStatus = setInterval(() => {
+          fetch(`/check-reservation-status/${jobid}`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.status === 'completed') {
+                console.log(data)
+                clearInterval(checkReservationStatus);
+                window.location = "./checkout?paymentId=" +data.paymentId;
+              } else if (data.status === 'not_found') {
+                clearInterval(checkReservationStatus);
+                throw new Error('Reservation not found');
+              }
+            })
+            .catch(error => console.error('Error checking reservation status:', error));
+        }, 500);
+
+      })
+      .catch(error => console.error('Error creating payment:', error));
   }
 
   handleReset() {

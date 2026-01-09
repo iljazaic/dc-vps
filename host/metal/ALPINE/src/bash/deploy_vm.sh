@@ -9,15 +9,23 @@ storage=$3
 cpu=$4
 image=$5
 vmid=$6
-port=&7
+port=$7
+ownkey=$8
+cert=$9
+certupdate=$10
 
 # Generate SSH keypair
-KEY_DIR="./vm_keys/${osname}_$(date +%s)"
+KEY_DIR="./vm_keys/${osname}_${vmid}"
 mkdir -p "$KEY_DIR"
-ssh-keygen -t ed25519 -f "$KEY_DIR/id_ed25519" -N "" -C "vm-${vmid}"
+if [ $ownkey = false ]; then
+    ssh-keygen -t ed25519 -f "$KEY_DIR/id_ed25519" -N "" -C "vm-${vmid}"
+fi
+
+#save private key
+PRIVATE_KEY=$(cat "$KEY_DIR/id_ed25519")
 
 FINGERPRINT=$(ssh-keygen -l -E sha256 -f "$KEY_DIR/id_ed25519" | awk '{print $2}')
-echo "Fingerprint: $FINGERPRINT"
+#echo "Fingerprint: $FINGERPRINT"
 
 qemu-system-x86_64 -m "$ram" -cdrom "../${osname}.iso" -drive file="$image" -vnc 127.0.0.1:1 -netdev user,id=net1,hostfwd=tcp::"$port"-:22 -device e1000,netdev=net1 -smp "$cpu"
 
