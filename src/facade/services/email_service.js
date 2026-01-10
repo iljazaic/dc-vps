@@ -1,5 +1,8 @@
+//manages resend api
+//to send emails
+
 const { Resend } = require('resend')
-require('dotenv').config({ path: '../secretes/.env' })
+require('dotenv').config({ path: '../secrets/.env' })
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const resend = new Resend(RESEND_API_KEY);

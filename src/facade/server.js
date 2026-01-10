@@ -1,15 +1,7 @@
 const express = require("express");
-const util = require('util');
-const exec = util.promisify(require('child_process').exec);
-
 const cron = require('node-cron');
-
-const axios = require('axios');
-
 const { v4: uuidv4 } = require('uuid');
-
 const path = require("path");
-const { createPrivateKey } = require("crypto");
 const app = express();
 app.use(express.static(path.join(__dirname.replace('server', ''), "public")));
 app.use(express.json());
@@ -17,119 +9,27 @@ app.use(express.json());
 //from upstream directory?
 const paymentService = require("./services/payment_service");
 const emailService = require("./services/email_service");
-
-const { create } = require("domain");
-
+const registrationService = require("./services/registration_service");
+const vpsService = require("./services/vps_service");
 
 const reservation_jobs = {};//to store the compute reserved by payments
 const pendingPayments = {}//to store reservations until they are processed
 const deployment_jobs = {}//to store the spinups
 
-//todo change to nonrelative
-const pathForBash = "../bash/";
-
-async function subdomainAvailiable(subdomain) {
-    try {
-        const { stdout, stderr } = await exec(`bash ${pathForBash + 'subdomain_service/verify_subdomain'}.sh ${subdomain}`);
-        return stdout.trim() == "true";
-    } catch (err) {
-        //console.error('Error:', err);
-        throw err;
-    }
-}
-
-async function createPayment(reservationJson) {
-
-    try {
-        const payload = await paymentService.createPaymentTemplate(reservationJson);
-
-        const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': '7ca2d37b3b7f4617b35072ebf8b113d3'
-        };
-        const url = 'https://test.api.dibspayment.eu/v1/payments';
-        console.log(payload)
-        const response = await axios.post(url, payload, { headers });
-
-        const paymentId = response.data.paymentId;
-
-        return paymentId;
-
-    } catch (error) {
-        console.error('Error:', error.message);
-        console.error(error.stack);
-
-        if (error.message.includes('payload') || error.code === 'ENOENT') {
-            return "error loading payload"
-        } else {
-            return "error craeting payment"
-        }
-    }
-}
-
-async function createReservation(reservationBody, paymentId) {
-    try {
-        const { stdout, stderr } =
-            await exec`bash ${pathForBash + "deployment_and_reservation/create_reservation"}.sh ${reservationBody.ram} ${reservationBody.sto} ${reservationBody.cpu} ${reservationBody.os} ${paymentId}`;
-
-        //should be the ip of the host machine
-        const trimmedOutput = stdout.trim();
-
-        if (trimmedOutput === "NO MACHINE CAN HOST") {
-            return { success: false, paymentId: paymentId, message: "No Machine Available to host, try again later." };
-        } else {
-            //save on gateway to remember the ip
-            await exec`bash ${pathForBash + "deployment_and_reservation/save_reservation_on_gateway"}.sh ${paymentId} ${trimmedOutput}`;
-            return { success: true, paymentId: null, message: "Reservation successfully created, redirecting to checkout." };
-        }
-    } catch (err) {
-        return { success: false, paymentId: null, message: "Internal Server Error while creating reservation. Try again or contact support." };
-    }
-}
-
-
-async function initiateDeployment(reservationId) {
-    try {
-        const { stdout, stderr } =
-            await exec`bash ${pathForBash + "deployment_and_reservation/get_reservation_ip_with_id"}.sh ${reservationId}`;
-        const trimmedOutput = stdout.trim();
-
-        if (trimmedOutput.includes("ERROR")) {
-            return { success: false, vm_id: null, ssh_key: null };
-        }
-        //output should be the ip
-
-        const vm_ip = trimmedOutput;
-        try {
-            const { stdout1, stderr1 } =
-                await exec`bash ${pathForBash + "deployment_and_reservation/initiate deployment"}.sh ${paymenId} ${ip}`;
-        } catch (err) {
-            return { success: false, vm_id: null, ssh_key: null };
-        }
-
-    } catch (er) {
-        console.log("ERROR: no ip found bound to the paymentId: " + reservationId)
-    }
-
-}
 
 //api
-
-const OTP_STORAGE = {};
-
-app.post("/validate-email", (req, res) => {
+app.post("/validate-email", async (req, res) => {
     try {
         const email = req.body.email;
         console.log(email);
-        if (email === undefined || email === null || email==='') {
+        if (email === undefined || email === null || email === '') {
             res.status(412).send("No email provided");
         } else {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (emailRegex.test(email)) {
-                const otp = Math.random().toString(36).substring(2, 8).toUpperCase();
-                OTP_STORAGE[email] = otp;
+                //generate and send otp to be validated
+                const otp = await registrationService.generateAndStoreOTP()
                 emailService.sendVerificationEmail(email, otp);
-                // TODO: implement email sending function
                 res.status(200).json({ message: "OTP sent to email" });
             } else {
                 res.status(400).send("Not a valid email");
@@ -144,7 +44,7 @@ app.get('/domain-available', async (req, res) => {
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);//assume its under 10s??
-        const isAv = await subdomainAvailiable(req.query.subd);
+        const isAv = await registrationService.subdomainAvailiable(req.query.subd);
         clearTimeout(timeoutId);
         res.json({ available: isAv });
     } catch (error) {
@@ -155,24 +55,55 @@ app.get('/domain-available', async (req, res) => {
 
 
 app.post('/create-reservation', async (req, res) => {
+    //pull body
     const reservationBody = req.body;
-    const jobId = uuidv4();
-    reservation_jobs[jobId] = { status: "processing" };
 
-    console.log(req.body);
-    const paymentId = await createPayment(reservationBody);
-
-    console.log(paymentId)
-    if (paymentId.includes("error")) {
-        res.status(500).send(paymentId);
+    //handle issues
+    if (reservationBody === null || reservationBody === undefined) {
+        res.status(400).send("No Reservation Body Provided")
+        return;
+    }
+    const email = reservationBody.email;
+    if (email === undefined || email === null) {
+        res.status(400).send("Malformed Query")
+        return;
+    }
+    const otp = reservationBody.otp;
+    if (otp === undefined || otp === null) {
+        res.status(400).send("No Code Provided - Please check your email")
         return;
     }
 
-    createReservation(reservationBody, paymentId).then(response => {
-        reservation_jobs[jobId] = { status: "completed", succes: response.success, paymentId: paymentId, message: response.message };
-    });
-
-    res.status(200).json({ jobId: jobId });
+    //email validation
+    try {
+        const otp_matches = registrationService.verifyOTP(email, otp)
+    } catch (err) {
+        if (err.includes("Invalid")) {
+            res.status(400).send(err);
+            return
+        }
+        else {
+            res.status(500).send("Error Verifying OTP - Try Again Later");
+            return;
+        }
+    }
+    if (otp_matches) {
+        //init payment
+        const paymentId = await paymentService.createPayment(reservationBody);
+        if (paymentId.includes("error")) {
+            res.status(500).send("Payment Processing Error - Please Try Again");
+            console.log(paymentId)
+            return;
+        }
+        //init reservation
+        const jobId = uuidv4();
+        reservation_jobs[jobId] = { status: "processing" };
+        createReservation(reservationBody, paymentId).then(response => {
+            reservation_jobs[jobId] = { status: "completed", succes: response.success, paymentId: paymentId, message: response.message };
+        })
+        //send tracker id
+        res.status(200).json({ jobId: jobId });
+    }
 });
 
 

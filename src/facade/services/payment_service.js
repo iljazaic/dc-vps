@@ -1,10 +1,11 @@
+//handles subscriptions and payments
+//runs cronjobs to charge payments
+
 const axios = require('axios');
 const path = require("path");
-require('dotenv').config({ path: '../secretes/.env' })
+require('dotenv').config({ path: '../secrets/.env' })
 
 const fs = require('fs');
-const { exec } = require('child_process');
-const cron = require('node-cron');
 
 async function getPrice(item, index) {
     const filePath = path.join(__dirname, '../../../lib/hosting/', 'resource_options.json');
@@ -31,17 +32,12 @@ async function getCurrency(item) {
     const jsonData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     return jsonData["prices"][item]["currency"];
 }
-
-//testing api key, safe for now
 const API_KEY = pricess.env.NETS_API_KEY;
-
-// Your NETS API configuration
 const NETS_CONFIG = {
     apiKey: API_KEY,
-    baseUrl: 'https://test.api.dibspayment.eu', // Use 'https://api.dibspayment.eu' for production
+    baseUrl: 'https://test.api.dibspayment.eu',
 };
 
-// Create axios instance with default config
 const netsClient = axios.create({
     baseURL: NETS_CONFIG.baseUrl,
     headers: {
@@ -237,9 +233,9 @@ async function dailySubscriptionCharges(pathToBash) {
 
                 console.log(`Charge failed: ${result.error}`);
                 // await sendPaymentFailedEmail(subscription.user_id);
-             }
+            }
 
-             await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
 
         console.log('\n=== Charge job completed ===');
@@ -331,9 +327,6 @@ function findValue(obj, key) {
  */
 async function createPaymentTemplate(icf) {
     const email = icf.email || 'not@provid.ed';
-
-
-
     const ramQuantity = await getQuantity("ram", icf.ram);
     const stoQuantity = await getQuantity("sto", icf.storage);
     const cpuQuantity = await getQuantity("cpu", icf.vcpu);
@@ -366,7 +359,7 @@ async function createPaymentTemplate(icf) {
             },
             "merchantHandlesConsumerData": true,
             "consumer": {
-                "email": "test@domain.com"
+                "email": email
             }
         },
         "subscription": {
@@ -438,6 +431,35 @@ async function cancelSubscription(subscriptionId) {
     return response.json();
 }
 
+async function createPayment(reservationJson) {
+
+    try {
+        const payload = await paymentService.createPaymentTemplate(reservationJson);
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': '7ca2d37b3b7f4617b35072ebf8b113d3'
+        };
+        const url = 'https://test.api.dibspayment.eu/v1/payments';
+        console.log(payload)
+        const response = await axios.post(url, payload, { headers });
+
+        const paymentId = response.data.paymentId;
+
+        return paymentId;
+
+    } catch (error) {
+        console.error('Error:', error.message);
+        console.error(error.stack);
+
+        if (error.message.includes('payload') || error.code === 'ENOENT') {
+            return "error loading payload"
+        } else {
+            return "error craeting payment"
+        }
+    }
+}
+
 // Export functions
 module.exports = {
     verifyPayment,
@@ -447,5 +469,6 @@ module.exports = {
     getQuantity,
     getCurrency,
     dailySubscriptionCharges,
-    getUnit
+    getUnit,
+    createPayment
 };
